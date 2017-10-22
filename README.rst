@@ -4,7 +4,7 @@ flask-passwordless
 
 .. image:: https://badge.fury.io/py/flask-passwordless.png
     :target: http://badge.fury.io/py/flask-passwordless
-    
+
 .. image:: https://travis-ci.org/kevinjqiu/flask-passwordless.png?branch=master
         :target: https://travis-ci.org/kevinjqiu/flask-passwordless
 
@@ -68,3 +68,8 @@ Take a look at the examples folder
 
 * Free software: BSD license
 * Documentation: http://flask-passwordless.rtfd.org.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Changes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+* Hash email before passing to token store to create 'nicer' URLs for users to login (ie, without their email address in the url)

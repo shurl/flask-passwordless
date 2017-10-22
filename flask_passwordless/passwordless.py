@@ -1,3 +1,4 @@
+import hashlib
 import uuid
 from .token_store import TOKEN_STORES
 from .login_url import LOGIN_URLS
@@ -26,11 +27,13 @@ class Passwordless(object):
 
     def request_token(self, user):
         token = uuid.uuid4().hex
-        self.token_store.store_or_update(token, user)
-        self.delivery_method(
-            self.login_url.generate(token, user),
-            email=user
-        )
+        uid = hashlib.sha224(user).hexdigest()
+        if self.token_store.get_by_userid(uid) is None:
+            self.token_store.store_or_update(token, uid)
+            self.delivery_method(
+                self.login_url.generate(token, uid),
+                email=user
+            )
 
     def authenticate(self, flask_request):
         token, uid = self.login_url.parse(flask_request)
