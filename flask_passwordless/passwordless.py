@@ -25,20 +25,21 @@ class Passwordless(object):
         login_url = config['LOGIN_URL']
         self.login_url = LOGIN_URLS[login_url](app.config)
 
-    def request_token(self, user):
+    def request_token(self, email):
         token = uuid.uuid4().hex
-        uid = hashlib.sha224(user).hexdigest()
+        uid = hashlib.sha224(email).hexdigest()
         if self.token_store.get_by_userid(uid) is None:
-            self.token_store.store_or_update(token, uid)
+            self.token_store.store_or_update(token, uid, email)
             self.delivery_method(
                 self.login_url.generate(token, uid),
-                email=user
+                email=email
             )
 
     def authenticate(self, flask_request):
         token, uid = self.login_url.parse(flask_request)
         is_authenticated = self.token_store.get_by_userid(uid) == token
+        email = self.token_store.get_email_by_userid(uid)
         if is_authenticated and self.single_use:
             self.token_store.invalidate_token(uid)
 
-        return is_authenticated
+        return is_authenticated, email

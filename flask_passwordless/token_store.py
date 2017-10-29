@@ -23,15 +23,21 @@ class TokenStore(object):
 class MemoryTokenStore(TokenStore):
     STORE = {}
 
-    def store_or_update(self, token, userid, ttl=600, origin=None):
-        self.STORE[userid] = token
+    def store_or_update(self, token, userid, email, ttl=600, origin=None):
+        to_add = {
+            'token': token,
+            'email': email
+        }
+        self.STORE[userid] = to_add
 
     def invalidate_token(self, userid):
         del self.STORE[userid]
 
     def get_by_userid(self, userid):
-        return self.STORE.get(userid, None)
+        return self.STORE.get(userid, {}).get('token')
 
+    def get_email_by_userid(self, userid):
+        return self.STORE.get(userid, {}).get('email')
 
 class RedisTokenStore(TokenStore):
 
@@ -90,17 +96,19 @@ class MongoTokenStore(TokenStore):
         else:
             self.ttl = None
 
-    def store_or_update(self, token, userid, ttl=None, origin=None):
+    def store_or_update(self, token, userid, email, ttl=None, origin=None):
         if not token:
             return False
         if not userid:
+            return False
+        if not email:
             return False
         if origin:
             if origin != self.origin:
                 return False
         if not ttl:
             ttl = self.ttl
-        self.db[self.dbname][self.collection_name].save({'token': token, 'userid': userid})
+        self.db[self.dbname][self.collection_name].save({'token': token, 'userid': userid, 'email': email})
 
     def invalidate_token(self, userid):
         self.db[self.dbname][self.collection_name].remove({'userid': userid})
@@ -108,10 +116,16 @@ class MongoTokenStore(TokenStore):
     def get_by_userid(self, userid):
         usertoken = self.db[self.dbname][self.collection_name].find_one({'userid': userid})
         if 'token' in usertoken:
-            return usertoken['token']
+            return usertoken['token'], usertoken['email']
         else:
             return None
 
+    def get_email_by_userid(self, userid):
+        usertoken = self.db[self.dbname][self.collection_name].find_one({'userid': userid})
+        if 'email' in usertoken:
+            return usertoken['email']
+        else:
+            return None
 
 TOKEN_STORES = {
     'memory': MemoryTokenStore,

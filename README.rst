@@ -73,3 +73,4 @@ Take a look at the examples folder
 Changes
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 * Hash email before passing to token store to create 'nicer' URLs for users to login (ie, without their email address in the url)
+* Store plain email in Mongo or Memory. Add function to return email.
