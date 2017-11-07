@@ -9,6 +9,10 @@ try:
     import boto.ses
 except ImportError:
     pass
+try:
+    import requests
+except ImportError:
+    pass
 from templates import MessageTemplate
 import smtplib
 from email.mime.text import MIMEText
@@ -75,6 +79,34 @@ class DeliverByMandrill(DeliveryMethod):
         except mandrill.Error as e:
             raise DeliveryError(str(e))
 
+class DeliverByElastic(DeliveryMethod):
+    def __init__(self, config):
+        self.tmpl_config = config['TEMPLATES']
+        econfig = config['ELASTIC']
+        self.apikey = econfig.get('API_KEY')
+        self.from_email = econfig.get('FROM')
+        self.subject = econfig.get('SUBJECT')
+        self.from_name = econfig.get('FROM_NAME')
+
+
+    def __call__(self, login_url, email):
+        contacts = []
+        contacts.append(email)
+        self.message_template = MessageTemplate(self.tmpl_config)
+        messagetext = self.message_template(login_url=login_url,email=email)
+        try:
+            params = {
+                'subject': self.subject,
+                'fromEmail': self.from_email,
+                'fromName': self.from_name,
+                'to': contacts,
+                'bodyHtml': messagetext,
+                'apikey': self.apikey
+            }
+            emailResponse = requests.get('https://api.elasticemail.com/v2/email/send', params=params)
+            emailResponse.raise_for_status()
+        except Exception as e:
+            raise DeliveryError(str(e))
 
 class DeliverBySMTP(DeliveryMethod):
     def __init__(self, config):
@@ -148,6 +180,7 @@ class DeliverBySES(DeliveryMethod):
 
 
 DELIVERY_METHODS = {
+    'elastic': DeliverByElastic,
     'mandrill': DeliverByMandrill,
     'smtp': DeliverBySMTP,
     'log': DeliverByLog,

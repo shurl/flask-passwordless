@@ -31,6 +31,7 @@ setup(
     package_dir={'flask_passwordless': 'flask_passwordless'},
     include_package_data=True,
     install_requires=[
+        'requests'
     ],
     license="BSD",
     zip_safe=False,
