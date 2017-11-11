@@ -74,4 +74,4 @@ Changes
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 * Hash email before passing to token store to create 'nicer' URLs for users to login (ie, without their email address in the url)
 * Store plain email in Mongo or Memory. Add function to return email.
-* Added support for elasticemail provider
+* Added support for elasticemail and mailgun providers

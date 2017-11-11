@@ -79,6 +79,38 @@ class DeliverByMandrill(DeliveryMethod):
         except mandrill.Error as e:
             raise DeliveryError(str(e))
 
+class DeliverByMailgun(DeliveryMethod):
+    def __init__(self, config):
+        self.tmpl_config = config['TEMPLATES']
+        econfig = config['MAILGUN']
+        self.apikey = econfig.get('API_KEY')
+        self.from_email = econfig.get('FROM')
+        self.subject = econfig.get('SUBJECT')
+        self.from_name = econfig.get('FROM_NAME')
+        self.domain = econfig.get('DOMAIN')
+
+    def __call__(self, login_url, email):
+        contacts = []
+        contacts.append(email)
+        self.message_template = MessageTemplate(self.tmpl_config)
+        messagetext = self.message_template(login_url=login_url,email=email)
+        auth = ("api", self.apikey)
+        data = {"from": "{}<{}>".format(self.from_name,self.from_email),
+              "to": contacts,
+              "subject": self.subject,
+              "html": messagetext }
+        try:
+            emailResponse = requests.post(
+                "https://api.mailgun.net/v3/{}/messages".format(self.domain),
+                auth=auth,
+                data=data
+            )
+            emailResponse.raise_for_status()
+        except Exception as e:
+            raise DeliveryError(str(e))
+
+
+
 class DeliverByElastic(DeliveryMethod):
     def __init__(self, config):
         self.tmpl_config = config['TEMPLATES']
@@ -181,6 +213,7 @@ class DeliverBySES(DeliveryMethod):
 
 DELIVERY_METHODS = {
     'elastic': DeliverByElastic,
+    'mailgun': DeliverByMailgun,
     'mandrill': DeliverByMandrill,
     'smtp': DeliverBySMTP,
     'log': DeliverByLog,
