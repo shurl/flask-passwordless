@@ -129,11 +129,13 @@ class DeliverByElastic(DeliveryMethod):
         try:
             params = {
                 'subject': self.subject,
-                'fromEmail': self.from_email,
+                'from': self.from_email,
                 'fromName': self.from_name,
                 'to': contacts,
                 'bodyHtml': messagetext,
-                'apikey': self.apikey
+                'bodyText': "Here is your login link: {}".format(login_url) ,
+                'apikey': self.apikey,
+                'isTransactional': True
             }
             emailResponse = requests.get('https://api.elasticemail.com/v2/email/send', params=params)
             emailResponse.raise_for_status()
